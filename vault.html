@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valvet</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <strong>Valvet</strong>
+    <nav class="app-nav">
+      <button type="button" data-view-tab="mina" class="active">Mina insättningar</button>
+      <button type="button" data-view-tab="sok">Sök</button>
+      <button type="button" data-view-tab="arkiv">Arkiv</button>
+      <button type="button" data-view-tab="mcp">MCP-nyckel</button>
+    </nav>
+    <span style="margin-left:auto; display:flex; align-items:center; gap:1rem;">
+      <span class="counter-badge" data-item-counter></span>
+      <button type="button" class="secondary" data-sign-out>Logga ut</button>
+    </span>
+  </header>
+
+  <main>
+    <section data-view-panel="mina">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Mina insättningar</h2>
+          <button type="button" class="primary" data-new-item-button>+ Ny insättning</button>
+        </div>
+      </div>
+
+      <div class="card" data-item-form-card hidden>
+        <h3 data-item-form-title>Ny insättning</h3>
+        <form class="item-form" data-item-form>
+          <input type="hidden" data-item-id />
+          <label for="item-type">Typ</label>
+          <select id="item-type" name="type" data-item-type required>
+            <option value="prompt">Prompt</option>
+            <option value="assistant">Assistent</option>
+          </select>
+
+          <label for="item-title">Titel</label>
+          <input id="item-title" name="title" data-item-title required maxlength="200" />
+
+          <label for="item-category">Kategori (valfritt)</label>
+          <input id="item-category" name="category" data-item-category maxlength="100" />
+
+          <label for="item-content">Innehåll</label>
+          <textarea id="item-content" name="content" data-item-content required maxlength="20000"></textarea>
+
+          <p class="status-message" data-item-form-status></p>
+
+          <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <button type="submit" class="primary" data-item-form-submit>Spara</button>
+            <button type="button" class="secondary" data-item-form-cancel>Avbryt</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div data-item-list></div>
+        <p class="status-message" data-item-list-empty hidden>Du har inga insättningar än. Klicka "+ Ny insättning" för att skapa din första.</p>
+      </div>
+    </section>
+
+    <section data-view-panel="sok" hidden>
+      <div class="card">
+        <label for="search-query">Sök i mina insättningar</label>
+        <input id="search-query" type="search" data-search-input placeholder="Titel, kategori eller innehåll..." />
+      </div>
+      <div class="card">
+        <div data-search-results></div>
+        <p class="status-message" data-search-empty hidden>Inga träffar.</p>
+      </div>
+    </section>
+
+    <section data-view-panel="arkiv" hidden>
+      <div class="card">
+        <h2 style="margin-top:0;">Arkiv</h2>
+        <div data-archive-list></div>
+        <p class="status-message" data-archive-empty hidden>Arkivet är tomt.</p>
+      </div>
+    </section>
+
+    <section data-view-panel="mcp" hidden>
+      <div class="card">
+        <h2 style="margin-top:0;">MCP-nyckel</h2>
+        <p>Använd en MCP-nyckel för att komma åt ditt Valvet direkt från ChatGPT eller Claude.</p>
+        <form data-mcp-key-form>
+          <label for="mcp-key-name">Namn på nyckeln</label>
+          <input id="mcp-key-name" name="name" required maxlength="60" placeholder="T.ex. Min bärbara dator" />
+          <button type="submit" class="primary" style="margin-top:0.5rem;">Skapa nyckel</button>
+        </form>
+        <div data-new-mcp-key-panel hidden>
+          <strong>Din nya nyckel (visas bara en gång):</strong>
+          <code class="secret-value" data-new-mcp-key></code>
+        </div>
+        <p class="status-message" data-mcp-key-status></p>
+        <div data-mcp-key-list style="margin-top:1rem;"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Installationsguide</h3>
+        <p>Lägg till Valvet i din MCP-klients konfiguration:</p>
+        <pre style="background:#f3f4f6; padding:0.75rem; border-radius:6px; overflow-x:auto;"><code>{
+  "mcpServers": {
+    "valvet": {
+      "url": "https://mcp.promptbanken.se/mcp",
+      "headers": { "X-MCP-Key": "DIN_NYCKEL_HÄR" }
+    }
+  }
+}</code></pre>
+        <p>Verktygen <code>list_my_items</code>, <code>search_my_items</code>, <code>get_my_item</code> fungerar direkt.
+        <code>save_my_item</code> är tillgängligt för alla (Free: 5 nya/månad via MCP).
+        <code>update_my_item</code> och <code>archive_my_item</code> kräver Pro.</p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Export</h3>
+        <button type="button" class="secondary" data-export-button>Exportera mina insättningar (JSON)</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/src/vault.js"></script>
+</body>
+</html>
