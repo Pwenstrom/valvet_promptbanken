@@ -1,0 +1,16 @@
+{
+  "name": "valvet-promptbanken",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "web:dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.84.0"
+  },
+  "devDependencies": {
+    "vite": "7.3.5"
+  }
+}
