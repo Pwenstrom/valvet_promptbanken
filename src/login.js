@@ -60,7 +60,12 @@ async function handleLogin(event) {
     }
   }
 
-  window.location.assign(getRedirectTarget());
+  // Kort "upplåst"-puls innan redirect -- respekterar reduced-motion via
+  // den globala CSS-regeln i style.css (animationen förkortas där, inte
+  // fördröjningen här, som är kort nog att vara ofarlig ändå).
+  setStatus('Upplåst!');
+  submitButton.classList.add('is-unlocking');
+  window.setTimeout(() => window.location.assign(getRedirectTarget()), 450);
 }
 
 function setAuthMode(nextMode) {

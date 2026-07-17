@@ -4,18 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Valvet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header class="app-header">
-    <strong>Valvet</strong>
+  <header class="app-header dial-texture">
+    <a class="wordmark" href="/vault.html">
+      <span class="vault-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14.5" stroke="#D9B876" stroke-width="1.4" />
+          <circle cx="16" cy="13.2" r="4.4" stroke="#D9B876" stroke-width="1.6" />
+          <path d="M16 17.6V23.5" stroke="#D9B876" stroke-width="1.6" stroke-linecap="round" />
+          <path d="M13.2 20.4L16 23.2L18.8 20.4" stroke="#D9B876" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+      Valvet
+    </a>
     <nav class="app-nav">
       <button type="button" data-view-tab="mina" class="active">Mina insättningar</button>
       <button type="button" data-view-tab="sok">Sök</button>
       <button type="button" data-view-tab="arkiv">Arkiv</button>
       <button type="button" data-view-tab="mcp">MCP-nyckel</button>
     </nav>
-    <span style="margin-left:auto; display:flex; align-items:center; gap:1rem;">
+    <span class="header-meta">
       <span class="counter-badge" data-item-counter></span>
       <button type="button" class="secondary" data-sign-out>Logga ut</button>
     </span>
@@ -23,11 +35,12 @@
 
   <main>
     <section data-view-panel="mina">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2 style="margin:0;">Mina insättningar</h2>
-          <button type="button" class="primary" data-new-item-button>+ Ny insättning</button>
+      <div class="view-heading">
+        <div>
+          <h2>Mina insättningar</h2>
+          <p class="view-heading__lede">Dina egna prompts och assistenter — privata, sökbara, alltid tillgängliga.</p>
         </div>
+        <button type="button" class="primary" data-new-item-button>+ Ny insättning</button>
       </div>
 
       <div class="card" data-item-form-card hidden>
@@ -60,40 +73,61 @@
 
       <div class="card">
         <div data-item-list></div>
-        <p class="status-message" data-item-list-empty hidden>Du har inga insättningar än. Klicka "+ Ny insättning" för att skapa din första.</p>
+        <p class="status-message empty-state" data-item-list-empty hidden>Du har inga insättningar än. Klicka &quot;+ Ny insättning&quot; för att skapa din första.</p>
       </div>
     </section>
 
     <section data-view-panel="sok" hidden>
+      <div class="view-heading">
+        <div>
+          <h2>Sök</h2>
+          <p class="view-heading__lede">Sök bland titel, kategori och innehåll i dina insättningar.</p>
+        </div>
+      </div>
       <div class="card">
-        <label for="search-query">Sök i mina insättningar</label>
-        <input id="search-query" type="search" data-search-input placeholder="Titel, kategori eller innehåll..." />
+        <div class="field" style="margin-bottom:0;">
+          <label for="search-query">Sökterm</label>
+          <input id="search-query" type="search" data-search-input placeholder="Titel, kategori eller innehåll..." />
+        </div>
       </div>
       <div class="card">
         <div data-search-results></div>
-        <p class="status-message" data-search-empty hidden>Inga träffar.</p>
+        <p class="status-message empty-state" data-search-empty hidden>Inga träffar.</p>
       </div>
     </section>
 
     <section data-view-panel="arkiv" hidden>
+      <div class="view-heading">
+        <div>
+          <h2>Arkiv</h2>
+          <p class="view-heading__lede">Arkiverade insättningar ligger kvar här tills du återställer dem.</p>
+        </div>
+      </div>
       <div class="card">
-        <h2 style="margin-top:0;">Arkiv</h2>
         <div data-archive-list></div>
-        <p class="status-message" data-archive-empty hidden>Arkivet är tomt.</p>
+        <p class="status-message empty-state" data-archive-empty hidden>Arkivet är tomt.</p>
       </div>
     </section>
 
     <section data-view-panel="mcp" hidden>
+      <div class="view-heading">
+        <div>
+          <h2>MCP-nyckel</h2>
+          <p class="view-heading__lede">Din nyckel öppnar valvet direkt inifrån Claude eller ChatGPT.</p>
+        </div>
+      </div>
+
       <div class="card">
-        <h2 style="margin-top:0;">MCP-nyckel</h2>
-        <p>Använd en MCP-nyckel för att komma åt ditt Valvet direkt från ChatGPT eller Claude.</p>
+        <h3 style="margin-top:0;">Skapa en nyckel</h3>
         <form data-mcp-key-form>
-          <label for="mcp-key-name">Namn på nyckeln</label>
-          <input id="mcp-key-name" name="name" required maxlength="60" placeholder="T.ex. Min bärbara dator" />
-          <button type="submit" class="primary" style="margin-top:0.5rem;">Skapa nyckel</button>
+          <div class="field">
+            <label for="mcp-key-name">Namn på nyckeln</label>
+            <input id="mcp-key-name" name="name" required maxlength="60" placeholder="T.ex. Min bärbara dator" />
+          </div>
+          <button type="submit" class="primary">Skapa nyckel</button>
         </form>
         <div data-new-mcp-key-panel hidden>
-          <strong>Din nya nyckel (visas bara en gång):</strong>
+          <strong>Din nya nyckel — kopiera den nu, den visas bara en gång:</strong>
           <code class="secret-value" data-new-mcp-key></code>
         </div>
         <p class="status-message" data-mcp-key-status></p>
@@ -101,23 +135,83 @@
       </div>
 
       <div class="card">
-        <h3 style="margin-top:0;">Installationsguide</h3>
-        <p>Lägg till Valvet i din MCP-klients konfiguration:</p>
-        <pre style="background:#f3f4f6; padding:0.75rem; border-radius:6px; overflow-x:auto;"><code>{
-  "mcpServers": {
-    "valvet": {
-      "url": "https://mcp.promptbanken.se/mcp",
-      "headers": { "X-MCP-Key": "DIN_NYCKEL_HÄR" }
+        <div class="guide-intro">
+          <span class="vault-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="14.5" stroke="#A97C3E" stroke-width="1.4" />
+              <circle cx="16" cy="13.2" r="4.4" stroke="#A97C3E" stroke-width="1.6" />
+              <path d="M16 17.6V23.5" stroke="#A97C3E" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M13.2 20.4L16 23.2L18.8 20.4" stroke="#A97C3E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <p>
+            Tänk på nyckeln som en riktig nyckel till en riktig dörr. Varje AI-klient (Claude, ChatGPT)
+            är en dörr in till ditt valv — koppla in nyckeln i klienten så kan den läsa och (om du har Pro)
+            skriva i dina insättningar åt dig. Välj din klient nedan.
+          </p>
+        </div>
+
+        <details class="client-guide" open>
+          <summary>
+            <span class="client-guide__badge client-guide__badge--claude" aria-hidden="true">C</span>
+            Claude (Desktop eller webb)
+          </summary>
+          <ol class="guide-steps">
+            <li>Öppna Claude och gå till <strong>Inställningar → Anslutningar</strong> (Settings → Connectors).</li>
+            <li>Välj <strong>Lägg till anpassad anslutning</strong> och klistra in adressen <code>https://mcp.promptbanken.se/mcp</code>.</li>
+            <li>Under anpassade headers, lägg till <code>X-MCP-Key</code> som namn och klistra in din nyckel som värde.</li>
+            <li>Spara. Claude kan nu läsa dina insättningar via <code>list_my_items</code>, <code>search_my_items</code> och <code>get_my_item</code> — och spara nya via <code>save_my_item</code>.</li>
+          </ol>
+          <p class="guide-note">
+            Ser du inte Anslutningar i din version? Redigera <code>claude_desktop_config.json</code> manuellt istället — se konfigurationen nedan.
+          </p>
+        </details>
+
+        <details class="client-guide">
+          <summary>
+            <span class="client-guide__badge client-guide__badge--chatgpt" aria-hidden="true">G</span>
+            ChatGPT
+          </summary>
+          <ol class="guide-steps">
+            <li>Öppna ChatGPT och gå till <strong>Inställningar → Anslutningar</strong> (Settings → Connectors) — funktionen rullas ut stegvis och kräver för närvarande Plus, Pro eller Team.</li>
+            <li>Välj <strong>Lägg till anpassad anslutning</strong> och ange adressen <code>https://mcp.promptbanken.se/mcp</code>.</li>
+            <li>Lägg till en anpassad header: <code>X-MCP-Key</code> med din nyckel som värde.</li>
+            <li>Aktivera anslutningen i en ny chatt (via verktygsikonen) för att låta ChatGPT läsa och spara i ditt valv.</li>
+          </ol>
+          <p class="guide-note">Saknar du alternativet? Din plan eller version kan sakna stöd för anpassade anslutningar ännu.</p>
+        </details>
+
+        <details class="client-guide">
+          <summary>
+            <span class="client-guide__badge" style="background:#5c6570;" aria-hidden="true">{ }</span>
+            Manuell konfiguration (avancerat)
+          </summary>
+          <div style="padding: 0 1.15rem 1.15rem;">
+            <p style="color:var(--muted); font-size:0.9rem; margin-top:0.75rem;">
+              För MCP-klienter som konfigureras via en JSON-fil (t.ex. Claude Desktops <code>claude_desktop_config.json</code>):
+            </p>
+            <div class="copy-row"><span>mcpServers-block</span></div>
+            <pre class="config-block"><code>{
+  <span class="tok-key">"mcpServers"</span>: {
+    <span class="tok-key">"valvet"</span>: {
+      <span class="tok-key">"url"</span>: <span class="tok-str">"https://mcp.promptbanken.se/mcp"</span>,
+      <span class="tok-key">"headers"</span>: { <span class="tok-key">"X-MCP-Key"</span>: <span class="tok-str">"DIN_NYCKEL_HÄR"</span> }
     }
   }
 }</code></pre>
-        <p>Verktygen <code>list_my_items</code>, <code>search_my_items</code>, <code>get_my_item</code> fungerar direkt.
-        <code>save_my_item</code> är tillgängligt för alla (Free: 5 nya/månad via MCP).
-        <code>update_my_item</code> och <code>archive_my_item</code> kräver Pro.</p>
+          </div>
+        </details>
+
+        <p class="guide-note" style="margin-top:1rem;">
+          <code>list_my_items</code>, <code>search_my_items</code> och <code>get_my_item</code> fungerar direkt för alla.
+          <code>save_my_item</code> är tillgängligt för alla (Free: 5 nya/månad via MCP).
+          <code>update_my_item</code> och <code>archive_my_item</code> kräver Pro.
+        </p>
       </div>
 
       <div class="card">
         <h3 style="margin-top:0;">Export</h3>
+        <p style="color:var(--muted); font-size:0.9rem; margin-top:-0.25rem;">Ladda ner alla dina insättningar (aktiva och arkiverade) som en JSON-fil.</p>
         <button type="button" class="secondary" data-export-button>Exportera mina insättningar (JSON)</button>
       </div>
     </section>

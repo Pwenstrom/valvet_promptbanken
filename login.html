@@ -4,41 +4,82 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Logga in — Valvet</title>
+  <meta name="description" content="Valvet är ditt personliga AI-valv för prompts och assistenter — spara privat, sök snabbt, lås upp i Claude och ChatGPT." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <main style="max-width: 400px; margin: 4rem auto;">
-    <div class="card">
-      <h1>Valvet</h1>
-      <p>Ditt personliga AI-valv för prompts och assistenter.</p>
+  <div class="login-shell">
+    <aside class="login-aside dial-texture">
+      <a class="wordmark" href="/login.html">
+        <span class="vault-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14.5" stroke="#D9B876" stroke-width="1.4" />
+            <circle cx="16" cy="13.2" r="4.4" stroke="#D9B876" stroke-width="1.6" />
+            <path d="M16 17.6V23.5" stroke="#D9B876" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M13.2 20.4L16 23.2L18.8 20.4" stroke="#D9B876" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        Valvet
+      </a>
 
-      <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
-        <button type="button" class="secondary active" data-auth-mode="login">Logga in</button>
-        <button type="button" class="secondary" data-auth-mode="signup">Skapa konto</button>
-        <button type="button" class="secondary" data-auth-mode="reset">Glömt lösenord</button>
-      </div>
+      <p class="login-aside__tagline">
+        Ditt personliga <strong>AI-valv</strong> för prompts och assistenter —
+        skilt från kommunens delade bibliotek, bara ditt.
+      </p>
 
-      <form data-login-form>
-        <label for="login-email">E-post</label>
-        <input id="login-email" type="email" data-login-email required autocomplete="email" />
+      <ul class="pitch-list">
+        <li>
+          <span class="pitch-icon" aria-hidden="true">1</span>
+          <span><strong>Sätt in privat.</strong> Spara dina bästa prompts och assistenter i ditt eget valv — ingen annan ser dem.</span>
+        </li>
+        <li>
+          <span class="pitch-icon" aria-hidden="true">2</span>
+          <span><strong>Hitta snabbt.</strong> Sök, redigera och arkivera insättningar när du behöver dem igen.</span>
+        </li>
+        <li>
+          <span class="pitch-icon" aria-hidden="true">3</span>
+          <span><strong>Lås upp i Claude &amp; ChatGPT.</strong> En MCP-nyckel kopplar valvet direkt till din AI-klient.</span>
+        </li>
+      </ul>
+    </aside>
 
-        <div data-password-field>
-          <label for="login-password">Lösenord</label>
-          <input id="login-password" type="password" data-login-password required autocomplete="current-password" />
+    <div class="login-formside">
+      <div class="login-card card">
+        <h1>Logga in</h1>
+        <p class="login-card__lede">Ange dina uppgifter för att öppna ditt valv.</p>
+
+        <div class="auth-mode-switch">
+          <button type="button" class="active" data-auth-mode="login">Logga in</button>
+          <button type="button" data-auth-mode="signup">Skapa konto</button>
+          <button type="button" data-auth-mode="reset">Glömt lösenord</button>
         </div>
 
-        <p class="status-message" data-login-status></p>
+        <form data-login-form>
+          <div class="field">
+            <label for="login-email">E-post</label>
+            <input id="login-email" type="email" data-login-email required autocomplete="email" />
+          </div>
 
-        <button type="submit" class="primary" data-auth-submit>Logga in</button>
-      </form>
+          <div class="field" data-password-field>
+            <label for="login-password">Lösenord</label>
+            <input id="login-password" type="password" data-login-password required autocomplete="current-password" />
+          </div>
 
-      <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);" />
+          <p class="status-message" data-login-status></p>
 
-      <button type="button" class="secondary" data-google-signin style="width:100%;">
-        Fortsätt med Google
-      </button>
+          <button type="submit" class="primary" data-auth-submit style="width:100%;">Logga in</button>
+        </form>
+
+        <div class="login-divider">eller</div>
+
+        <button type="button" class="secondary" data-google-signin style="width:100%;">
+          Fortsätt med Google
+        </button>
+      </div>
     </div>
-  </main>
+  </div>
   <script type="module" src="/src/login.js"></script>
 </body>
 </html>
