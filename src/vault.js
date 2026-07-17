@@ -320,3 +320,90 @@ bootstrap().then((ok) => {
   if (!ok) return;
   loadItems();
 });
+
+const pendingArchiveConfirms = new WeakMap();
+
+function confirmThenArchive(button, item) {
+  if (pendingArchiveConfirms.has(button)) {
+    clearTimeout(pendingArchiveConfirms.get(button));
+    pendingArchiveConfirms.delete(button);
+    archiveItem(item);
+    return;
+  }
+
+  const originalText = button.textContent;
+  button.textContent = 'Bekräfta arkivering?';
+  const timer = setTimeout(() => {
+    button.textContent = originalText;
+    pendingArchiveConfirms.delete(button);
+  }, 4000);
+  pendingArchiveConfirms.set(button, timer);
+}
+
+async function archiveItem(item) {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ status: 'archived' })
+    .eq('id', item.id);
+
+  if (error) {
+    setErrorStatus('[data-item-list-empty]', error, 'Kunde inte arkivera insättningen.');
+    return;
+  }
+
+  await loadItems();
+}
+
+export async function loadArchive() {
+  const { data, error } = await supabase
+    .from('content_items')
+    .select('id, type, title, content, category, status, updated_at')
+    .eq('workspace_id', state.workspace.id)
+    .eq('module', 'valvet')
+    .eq('owner_user_id', state.user.id)
+    .eq('status', 'archived')
+    .order('updated_at', { ascending: false });
+
+  const list = document.querySelector('[data-archive-list]');
+  const empty = document.querySelector('[data-archive-empty]');
+  list.innerHTML = '';
+
+  if (error) {
+    setErrorStatus('[data-archive-empty]', error, 'Kunde inte ladda arkivet.');
+    empty.hidden = false;
+    return;
+  }
+
+  state.archived = data || [];
+
+  if (!state.archived.length) {
+    empty.hidden = false;
+    empty.classList.remove('is-error');
+    empty.textContent = 'Arkivet är tomt.';
+  } else {
+    empty.hidden = true;
+    state.archived.forEach((item) => list.appendChild(renderItemRow(item, { showRestoreOnly: true })));
+  }
+}
+
+async function restoreItem(item) {
+  if (state.items.length >= vaultItemLimit()) {
+    setErrorStatus('[data-archive-empty]', { message: `Du har nått gränsen på ${vaultItemLimit()} insättningar — arkivera något annat först.` }, '');
+    document.querySelector('[data-archive-empty]').hidden = false;
+    return;
+  }
+
+  const { error } = await supabase
+    .from('content_items')
+    .update({ status: 'draft' })
+    .eq('id', item.id);
+
+  if (error) {
+    setErrorStatus('[data-archive-empty]', error, 'Kunde inte återställa insättningen.');
+    return;
+  }
+
+  await Promise.all([loadItems(), loadArchive()]);
+}
+
+document.querySelector('[data-view-tab="arkiv"]')?.addEventListener('click', () => loadArchive());
