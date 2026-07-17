@@ -153,7 +153,7 @@ function escapeHtml(value) {
 export async function loadItems() {
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, type, title, content, category, status, updated_at')
+    .select('id, type, title, content, category, status, created_at, updated_at')
     .eq('workspace_id', state.workspace.id)
     .eq('module', 'valvet')
     .eq('owner_user_id', state.user.id)
@@ -192,6 +192,10 @@ function renderItems() {
 let editingItemId = null;
 
 export function openItemForm(item = null) {
+  // renderItemRow (och dess Redigera-knapp) återanvänds av bade "Mina
+  // insättningar" och Sök-fliken -- utan detta öppnas formuläret i den
+  // dolda mina-panelen när man redigerar fran ett sökresultat.
+  switchView('mina');
   editingItemId = item?.id ?? null;
   document.querySelector('[data-item-form-card]').hidden = false;
   document.querySelector('[data-item-form-title]').textContent = item ? 'Redigera insättning' : 'Ny insättning';
@@ -284,7 +288,7 @@ async function runSearch(query) {
   const like = `%${query.trim()}%`;
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, type, title, content, category, status, updated_at')
+    .select('id, type, title, content, category, status, created_at, updated_at')
     .eq('workspace_id', state.workspace.id)
     .eq('module', 'valvet')
     .eq('owner_user_id', state.user.id)
@@ -341,6 +345,12 @@ function confirmThenArchive(button, item) {
 }
 
 async function archiveItem(item) {
+  // Arkivera-knappen renderas aven i Sök-resultat (renderItemRow delas mellan
+  // vyerna) -- utan detta blir statusmeddelandet och den uppdaterade listan
+  // osynliga i den dolda mina-panelen, och den arkiverade raden ligger kvar
+  // synlig i sökresultatet tills nästa sökning.
+  switchView('mina');
+
   const { error } = await supabase
     .from('content_items')
     .update({ status: 'archived' })
@@ -357,7 +367,7 @@ async function archiveItem(item) {
 export async function loadArchive() {
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, type, title, content, category, status, updated_at')
+    .select('id, type, title, content, category, status, created_at, updated_at')
     .eq('workspace_id', state.workspace.id)
     .eq('module', 'valvet')
     .eq('owner_user_id', state.user.id)
@@ -527,6 +537,7 @@ function exportItems() {
     content: item.content,
     category: item.category,
     status: item.status,
+    created_at: item.created_at,
     updated_at: item.updated_at
   }));
 
