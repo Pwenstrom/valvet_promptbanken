@@ -269,6 +269,53 @@ document.querySelector('[data-new-item-button]')?.addEventListener('click', () =
 document.querySelector('[data-item-form-cancel]')?.addEventListener('click', () => closeItemForm());
 document.querySelector('[data-item-form]')?.addEventListener('submit', saveItem);
 
+let searchDebounceTimer = null;
+
+async function runSearch(query) {
+  const results = document.querySelector('[data-search-results]');
+  const empty = document.querySelector('[data-search-empty]');
+
+  if (!query.trim()) {
+    results.innerHTML = '';
+    empty.hidden = true;
+    return;
+  }
+
+  const like = `%${query.trim()}%`;
+  const { data, error } = await supabase
+    .from('content_items')
+    .select('id, type, title, content, category, status, updated_at')
+    .eq('workspace_id', state.workspace.id)
+    .eq('module', 'valvet')
+    .eq('owner_user_id', state.user.id)
+    .neq('status', 'archived')
+    .or(`title.ilike.${like},content.ilike.${like},category.ilike.${like}`)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    results.innerHTML = '';
+    setErrorStatus('[data-search-empty]', error, 'Sökningen misslyckades.');
+    empty.hidden = false;
+    return;
+  }
+
+  results.innerHTML = '';
+  if (!data.length) {
+    empty.hidden = false;
+    empty.classList.remove('is-error');
+    empty.textContent = 'Inga träffar.';
+  } else {
+    empty.hidden = true;
+    data.forEach((item) => results.appendChild(renderItemRow(item)));
+  }
+}
+
+document.querySelector('[data-search-input]')?.addEventListener('input', (event) => {
+  clearTimeout(searchDebounceTimer);
+  const query = event.target.value;
+  searchDebounceTimer = setTimeout(() => runSearch(query), 250);
+});
+
 bootstrap().then((ok) => {
   if (!ok) return;
   loadItems();
