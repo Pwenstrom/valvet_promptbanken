@@ -153,7 +153,7 @@ function escapeHtml(value) {
 export async function loadItems() {
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, type, title, content, category, status, created_at, updated_at')
+    .select('id, type, title, content, category, status, updated_at')
     .eq('workspace_id', state.workspace.id)
     .eq('module', 'valvet')
     .eq('owner_user_id', state.user.id)
@@ -288,7 +288,7 @@ async function runSearch(query) {
   const like = `%${query.trim()}%`;
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, type, title, content, category, status, created_at, updated_at')
+    .select('id, type, title, content, category, status, updated_at')
     .eq('workspace_id', state.workspace.id)
     .eq('module', 'valvet')
     .eq('owner_user_id', state.user.id)
@@ -367,7 +367,7 @@ async function archiveItem(item) {
 export async function loadArchive() {
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, type, title, content, category, status, created_at, updated_at')
+    .select('id, type, title, content, category, status, updated_at')
     .eq('workspace_id', state.workspace.id)
     .eq('module', 'valvet')
     .eq('owner_user_id', state.user.id)
@@ -537,7 +537,6 @@ function exportItems() {
     content: item.content,
     category: item.category,
     status: item.status,
-    created_at: item.created_at,
     updated_at: item.updated_at
   }));
 
