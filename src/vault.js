@@ -407,3 +407,141 @@ async function restoreItem(item) {
 }
 
 document.querySelector('[data-view-tab="arkiv"]')?.addEventListener('click', () => loadArchive());
+
+const MCP_KEY_LIMITS = { free: 1, pro: 3 };
+
+function mcpKeyLimit() {
+  return MCP_KEY_LIMITS[state.workspace?.plan] ?? 1;
+}
+
+async function loadMcpKeys() {
+  const { data, error } = await supabase
+    .from('api_keys')
+    .select('id, name, key_prefix, revoked_at, created_at')
+    .eq('workspace_id', state.workspace.id)
+    .contains('scopes', ['mcp'])
+    .order('created_at', { ascending: false });
+
+  const container = document.querySelector('[data-mcp-key-list]');
+  container.innerHTML = '';
+
+  if (error) {
+    setErrorStatus('[data-mcp-key-status]', error, 'Kunde inte ladda MCP-nycklar.');
+    return;
+  }
+
+  (data || []).forEach((key) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    const status = key.revoked_at ? 'Återkallad' : 'Aktiv';
+    row.innerHTML = `
+      <div class="item-meta">
+        <div class="item-title">${escapeHtml(key.name)}</div>
+        <div class="item-sub">${escapeHtml(key.key_prefix)}... — ${status}</div>
+      </div>
+      <div class="item-actions"></div>
+    `;
+    if (!key.revoked_at) {
+      const revokeBtn = document.createElement('button');
+      revokeBtn.type = 'button';
+      revokeBtn.className = 'danger';
+      revokeBtn.textContent = 'Återkalla';
+      revokeBtn.addEventListener('click', async () => {
+        const { error: revokeError } = await supabase
+          .from('api_keys')
+          .update({ revoked_at: new Date().toISOString() })
+          .eq('id', key.id);
+        if (revokeError) {
+          setErrorStatus('[data-mcp-key-status]', revokeError, 'Kunde inte återkalla nyckeln.');
+          return;
+        }
+        await loadMcpKeys();
+      });
+      row.querySelector('.item-actions').appendChild(revokeBtn);
+    }
+    container.appendChild(row);
+  });
+}
+
+async function createMcpKey(event) {
+  event.preventDefault();
+
+  const nameInput = document.querySelector('#mcp-key-name');
+  const name = nameInput.value.trim();
+  if (!name) {
+    setStatus('[data-mcp-key-status]', 'Namn krävs.', true);
+    return;
+  }
+
+  const { count } = await supabase
+    .from('api_keys')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', state.workspace.id)
+    .contains('scopes', ['mcp'])
+    .is('revoked_at', null);
+
+  if ((count ?? 0) >= mcpKeyLimit()) {
+    setStatus('[data-mcp-key-status]', `Du har nått gränsen på ${mcpKeyLimit()} aktiva MCP-nyckel(ar) för din plan.`, true);
+    return;
+  }
+
+  const rawKey = `pb_mcp_${randomToken()}`;
+  const keyPrefix = rawKey.slice(0, 16);
+  const keyHash = await sha256Hex(rawKey);
+
+  const { error } = await supabase.from('api_keys').insert({
+    workspace_id: state.workspace.id,
+    created_by: state.user.id,
+    name,
+    key_prefix: keyPrefix,
+    key_hash: keyHash,
+    scopes: ['mcp']
+  });
+
+  if (error) {
+    setErrorStatus('[data-mcp-key-status]', error, 'Kunde inte skapa MCP-nyckel.');
+    return;
+  }
+
+  document.querySelector('[data-mcp-key-form]').reset();
+  document.querySelector('[data-new-mcp-key-panel]').hidden = false;
+  document.querySelector('[data-new-mcp-key]').textContent = rawKey;
+  setStatus('[data-mcp-key-status]', 'Nyckeln skapades. Kopiera den nu, den visas bara en gång.');
+  await loadMcpKeys();
+}
+
+document.querySelector('[data-mcp-key-form]')?.addEventListener('submit', createMcpKey);
+document.querySelector('[data-view-tab="mcp"]')?.addEventListener('click', () => loadMcpKeys());
+
+function exportItems() {
+  const all = [...state.items, ...state.archived];
+  if (!all.length) {
+    setStatus('[data-mcp-key-status]', 'Du har inga insättningar att exportera än.', true);
+    return;
+  }
+
+  const payload = all.map((item) => ({
+    id: item.id,
+    type: item.type,
+    title: item.title,
+    content: item.content,
+    category: item.category,
+    status: item.status,
+    updated_at: item.updated_at
+  }));
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `valvet-export-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.querySelector('[data-export-button]')?.addEventListener('click', async () => {
+  await loadArchive(); // säkerställ att arkivet är laskat innan export inkluderar det
+  exportItems();
+});
