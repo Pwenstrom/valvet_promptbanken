@@ -376,29 +376,17 @@ async function updateCatalogQuota() {
   const quotaEl = document.querySelector('[data-catalog-quota]');
   if (!quotaEl) return;
 
-  if (state.workspace?.plan !== 'free') {
-    quotaEl.textContent = 'Obegränsad kopiering (Pro).';
-    return;
-  }
+  const { data, error } = await supabase.rpc('valvet_catalog_copy_quota');
 
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  const { count, error } = await supabase
-    .from('content_items')
-    .select('id', { count: 'exact', head: true })
-    .eq('workspace_id', state.workspace.id)
-    .eq('module', 'valvet')
-    .eq('source', 'catalog_copy')
-    .gte('created_at', startOfMonth.toISOString());
-
-  if (error) {
+  if (error || !data || !data.length) {
     quotaEl.textContent = '';
     return;
   }
 
-  quotaEl.textContent = `${count ?? 0} av 5 kopior denna månad.`;
+  const { used, monthly_limit } = data[0];
+  quotaEl.textContent = monthly_limit === null
+    ? 'Obegränsad kopiering (Pro).'
+    : `${used} av ${monthly_limit} kopior denna månad.`;
 }
 
 async function loadCatalog(query = '') {
