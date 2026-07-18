@@ -25,6 +25,7 @@
       <button type="button" data-view-tab="mina" class="active">Mina insättningar</button>
       <button type="button" data-view-tab="sok">Sök</button>
       <button type="button" data-view-tab="arkiv">Arkiv</button>
+      <button type="button" data-view-tab="katalog">Bläddra i Promptbanken</button>
       <button type="button" data-view-tab="mcp">MCP-nyckel</button>
     </nav>
     <span class="header-meta">
@@ -106,6 +107,27 @@
       <div class="card">
         <div data-archive-list></div>
         <p class="status-message empty-state" data-archive-empty hidden>Arkivet är tomt.</p>
+      </div>
+    </section>
+
+    <section data-view-panel="katalog" hidden>
+      <div class="view-heading">
+        <div>
+          <h2>Bläddra i Promptbanken</h2>
+          <p class="view-heading__lede">Kopiera prompts och assistenter från katalogen till ditt eget valv.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="field" style="margin-bottom:0;">
+          <label for="catalog-search">Sökterm</label>
+          <input id="catalog-search" type="search" data-catalog-search-input placeholder="Titel, kategori eller innehåll..." />
+        </div>
+      </div>
+      <p class="status-message" data-catalog-quota></p>
+      <p class="status-message" data-catalog-status></p>
+      <div class="card">
+        <div data-catalog-list></div>
+        <p class="status-message empty-state" data-catalog-empty hidden>Inga träffar.</p>
       </div>
     </section>
 

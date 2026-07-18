@@ -53,7 +53,7 @@ export function vaultItemLimit() {
   return state.workspace?.plan === 'free' ? 50 : 1000;
 }
 
-const VIEW_NAMES = ['mina', 'sok', 'arkiv', 'mcp'];
+const VIEW_NAMES = ['mina', 'sok', 'arkiv', 'katalog', 'mcp'];
 
 export function switchView(name) {
   VIEW_NAMES.forEach((view) => {
@@ -318,6 +318,133 @@ document.querySelector('[data-search-input]')?.addEventListener('input', (event)
   clearTimeout(searchDebounceTimer);
   const query = event.target.value;
   searchDebounceTimer = setTimeout(() => runSearch(query), 250);
+});
+
+const CATALOG_TYPE_LABELS = {
+  prompt: 'Prompt',
+  routine: 'Rutin',
+  checklist: 'Checklista',
+  guide: 'Guide',
+  faq: 'FAQ',
+  document: 'Dokument',
+  template: 'Mall',
+  assistant: 'Assistent'
+};
+
+function renderCatalogRow(item) {
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <div class="item-meta">
+      <div class="item-title">${escapeHtml(item.title)} <span style="font-weight:400; color:var(--muted);">(${escapeHtml(CATALOG_TYPE_LABELS[item.type] || item.type)})</span></div>
+      <div class="item-sub">${item.category ? escapeHtml(item.category) + ' — ' : ''}Publicerad ${new Date(item.published_at).toLocaleDateString('sv-SE')}</div>
+    </div>
+    <div class="item-actions"></div>
+  `;
+
+  const actions = row.querySelector('.item-actions');
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.className = 'secondary';
+  copyBtn.textContent = 'Kopiera till mitt Valv';
+  copyBtn.addEventListener('click', () => copyToValvet(copyBtn, item));
+  actions.appendChild(copyBtn);
+
+  return row;
+}
+
+async function copyToValvet(button, item) {
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = 'Kopierar...';
+
+  const { error } = await supabase.rpc('copy_catalog_item_to_valvet', { p_source_item_id: item.id });
+
+  button.disabled = false;
+  button.textContent = originalText;
+
+  if (error) {
+    setErrorStatus('[data-catalog-status]', error, 'Kunde inte kopiera posten.');
+    return;
+  }
+
+  setStatus('[data-catalog-status]', `"${item.title}" kopierad till ditt valv.`);
+  await Promise.all([loadItems(), updateCatalogQuota()]);
+}
+
+async function updateCatalogQuota() {
+  const quotaEl = document.querySelector('[data-catalog-quota]');
+  if (!quotaEl) return;
+
+  if (state.workspace?.plan !== 'free') {
+    quotaEl.textContent = 'Obegränsad kopiering (Pro).';
+    return;
+  }
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const { count, error } = await supabase
+    .from('content_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', state.workspace.id)
+    .eq('module', 'valvet')
+    .eq('source', 'catalog_copy')
+    .gte('created_at', startOfMonth.toISOString());
+
+  if (error) {
+    quotaEl.textContent = '';
+    return;
+  }
+
+  quotaEl.textContent = `${count ?? 0} av 5 kopior denna månad.`;
+}
+
+async function loadCatalog(query = '') {
+  const view = state.workspace?.plan === 'pro' ? 'published_workspace_content' : 'published_public_content';
+  let request = supabase.from(view).select('id, type, title, content, category, published_at');
+
+  const trimmed = query.trim();
+  if (trimmed) {
+    const like = `%${trimmed}%`;
+    request = request.or(`title.ilike.${like},content.ilike.${like},category.ilike.${like}`);
+  }
+
+  const { data, error } = await request.order('published_at', { ascending: false });
+
+  const list = document.querySelector('[data-catalog-list]');
+  const empty = document.querySelector('[data-catalog-empty]');
+  list.innerHTML = '';
+
+  if (error) {
+    setErrorStatus('[data-catalog-empty]', error, 'Kunde inte ladda katalogen.');
+    empty.hidden = false;
+    return;
+  }
+
+  if (!data.length) {
+    empty.hidden = false;
+    empty.classList.remove('is-error');
+    empty.textContent = 'Inga träffar.';
+  } else {
+    empty.hidden = true;
+    data.forEach((item) => list.appendChild(renderCatalogRow(item)));
+  }
+
+  await updateCatalogQuota();
+}
+
+let catalogSearchDebounceTimer = null;
+
+document.querySelector('[data-catalog-search-input]')?.addEventListener('input', (event) => {
+  clearTimeout(catalogSearchDebounceTimer);
+  const query = event.target.value;
+  catalogSearchDebounceTimer = setTimeout(() => loadCatalog(query), 250);
+});
+
+document.querySelector('[data-view-tab="katalog"]')?.addEventListener('click', () => {
+  loadCatalog(document.querySelector('[data-catalog-search-input]')?.value || '');
 });
 
 bootstrap().then((ok) => {
