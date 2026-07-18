@@ -5,6 +5,7 @@ export const state = {
   session: null,
   user: null,
   workspace: null,
+  usage: null,      // senaste get_plan_usage-rad, null = okänd (fallback till konstanter)
   items: [],       // aktiva "Mina insättningar"
   archived: []      // arkiverade
 };
@@ -50,7 +51,7 @@ export function slugify(value) {
 }
 
 export function vaultItemLimit() {
-  return state.workspace?.plan === 'free' ? 50 : 1000;
+  return state.usage?.valvet_items_max ?? (state.workspace?.plan === 'free' ? 50 : 1000);
 }
 
 const VIEW_NAMES = ['mina', 'sok', 'arkiv', 'katalog', 'mcp'];
@@ -101,7 +102,43 @@ export async function bootstrap() {
   }
 
   state.workspace = workspace;
+  await refreshUsage();
   return true;
+}
+
+export async function refreshUsage() {
+  if (!state.workspace) return;
+  const { data, error } = await supabase.rpc('get_plan_usage', { p_workspace_id: state.workspace.id });
+  if (error) {
+    // Gränserna upprätthålls server-side (triggrar/RPC:er) -- vid fel behåller
+    // vi senaste kända värden och faller annars tillbaka till konstanterna.
+    renderUsage();
+    return;
+  }
+  state.usage = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
+  renderUsage();
+}
+
+function renderUsage() {
+  const el = document.querySelector('[data-mcp-usage]');
+  if (!el) return;
+  if (!state.usage) {
+    el.textContent = '';
+    return;
+  }
+  const u = state.usage;
+  const parts = [`${u.used_mcp_keys} av ${u.max_mcp_keys} aktiva MCP-nycklar.`];
+  if ('monthly_saves_max' in u) {
+    parts.push(u.monthly_saves_max === null
+      ? 'Obegränsade sparningar via MCP (Pro).'
+      : `${u.monthly_saves_used} av ${u.monthly_saves_max} sparningar via MCP denna månad.`);
+  }
+  if ('catalog_copies_max' in u) {
+    parts.push(u.catalog_copies_max === null
+      ? 'Obegränsade katalogkopior (Pro).'
+      : `${u.catalog_copies_used} av ${u.catalog_copies_max} katalogkopior denna månad.`);
+  }
+  el.textContent = parts.join(' ');
 }
 
 function renderItemRow(item, { showRestoreOnly = false } = {}) {
@@ -185,8 +222,9 @@ function renderItems() {
 
   const counter = document.querySelector('[data-item-counter]');
   const limit = vaultItemLimit();
-  counter.textContent = `${state.items.length} av ${limit} insättningar`;
-  counter.classList.toggle('is-limit', state.items.length >= limit);
+  const used = state.usage?.valvet_items_used ?? state.items.length;
+  counter.textContent = `${used} av ${limit} insättningar`;
+  counter.classList.toggle('is-limit', used >= limit);
 }
 
 let editingItemId = null;
@@ -266,7 +304,7 @@ async function saveItem(event) {
   }
 
   closeItemForm();
-  await loadItems();
+  await Promise.all([loadItems(), refreshUsage()]);
 }
 
 document.querySelector('[data-new-item-button]')?.addEventListener('click', () => openItemForm());
@@ -369,7 +407,7 @@ async function copyToValvet(button, item) {
   }
 
   setStatus('[data-catalog-status]', `"${item.title}" kopierad till ditt valv.`);
-  await Promise.all([loadItems(), updateCatalogQuota()]);
+  await Promise.all([loadItems(), updateCatalogQuota(), refreshUsage()]);
 }
 
 async function updateCatalogQuota() {
@@ -476,7 +514,7 @@ async function archiveItem(item) {
     return;
   }
 
-  await loadItems();
+  await Promise.all([loadItems(), refreshUsage()]);
 }
 
 export async function loadArchive() {
@@ -528,15 +566,13 @@ async function restoreItem(item) {
     return;
   }
 
-  await Promise.all([loadItems(), loadArchive()]);
+  await Promise.all([loadItems(), loadArchive(), refreshUsage()]);
 }
 
 document.querySelector('[data-view-tab="arkiv"]')?.addEventListener('click', () => loadArchive());
 
-const MCP_KEY_LIMITS = { free: 1, pro: 3 };
-
 function mcpKeyLimit() {
-  return MCP_KEY_LIMITS[state.workspace?.plan] ?? 1;
+  return state.usage?.max_mcp_keys ?? (state.workspace?.plan === 'pro' ? 3 : 1);
 }
 
 async function loadMcpKeys() {
@@ -580,7 +616,7 @@ async function loadMcpKeys() {
           setErrorStatus('[data-mcp-key-status]', revokeError, 'Kunde inte återkalla nyckeln.');
           return;
         }
-        await loadMcpKeys();
+        await Promise.all([loadMcpKeys(), refreshUsage()]);
       });
       row.querySelector('.item-actions').appendChild(revokeBtn);
     }
@@ -632,7 +668,7 @@ async function createMcpKey(event) {
   document.querySelector('[data-new-mcp-key-panel]').hidden = false;
   document.querySelector('[data-new-mcp-key]').textContent = rawKey;
   setStatus('[data-mcp-key-status]', 'Nyckeln skapades. Kopiera den nu, den visas bara en gång.');
-  await loadMcpKeys();
+  await Promise.all([loadMcpKeys(), refreshUsage()]);
 }
 
 document.querySelector('[data-mcp-key-form]')?.addEventListener('submit', createMcpKey);
