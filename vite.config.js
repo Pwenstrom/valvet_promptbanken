@@ -7,7 +7,8 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'index.html'),
         login: resolve(__dirname, 'login.html'),
-        vault: resolve(__dirname, 'vault.html')
+        vault: resolve(__dirname, 'vault.html'),
+        planer: resolve(__dirname, 'planer.html')
       }
     }
   }
