@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planer och priser — Valvet</title>
+  <meta name="description" content="Valvets planer: Free och Pro. Jämför gränser för insättningar och MCP-nycklar." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="plans-page">
+  <header class="plans-header">
+    <a class="wordmark" href="login.html">
+      <span class="vault-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14.5" stroke="#D9B876" stroke-width="1.4" />
+          <circle cx="16" cy="13.2" r="4.4" stroke="#D9B876" stroke-width="1.6" />
+          <path d="M16 17.6V23.5" stroke="#D9B876" stroke-width="1.6" stroke-linecap="round" />
+          <path d="M13.2 20.4L16 23.2L18.8 20.4" stroke="#D9B876" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+      Valvet
+    </a>
+    <a class="plans-back" href="login.html">&larr; Till inloggning</a>
+  </header>
+
+  <main class="plans-main">
+    <h1>Planer och priser</h1>
+    <p class="plans-lede">Free räcker för att komma igång. Pro ger fler insättningar och full MCP-åtkomst.</p>
+
+    <div class="plans-grid">
+      <div class="plans-card">
+        <strong class="plans-card__tier">Free</strong>
+        <p class="plans-card__price">0 kr</p>
+        <p class="plans-card__pitch">För dig som vill testa valvet.</p>
+        <ul class="plans-card__features">
+          <li>✓ 50 insättningar</li>
+          <li>✓ 1 MCP-nyckel</li>
+          <li>✓ Spara via MCP (5/månad)</li>
+          <li>✗ Uppdatera/arkivera via MCP</li>
+        </ul>
+        <a class="secondary" href="login.html" style="width:100%; display:block; text-align:center; text-decoration:none;">Skapa konto</a>
+      </div>
+
+      <div class="plans-card plans-card--pro">
+        <span class="plans-card__badge">Kommer snart</span>
+        <strong class="plans-card__tier">Pro</strong>
+        <p class="plans-card__price">—</p>
+        <p class="plans-card__pitch">För dig som sparar och organiserar ofta.</p>
+        <ul class="plans-card__features">
+          <li>✓ 1000 insättningar</li>
+          <li>✓ 3 MCP-nycklar</li>
+          <li>✓ Spara obegränsat via MCP</li>
+          <li>✓ Uppdatera &amp; arkivera via MCP</li>
+        </ul>
+        <button type="button" class="primary" style="width:100%;" disabled>Kommer snart</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

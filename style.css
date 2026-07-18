@@ -296,6 +296,203 @@ code, kbd, pre { font-family: var(--font-mono); }
 }
 
 /* ==========================================================================
+   Google-inloggning & planjämförelse — samma klassnamn och layout som
+   Promptbankens övriga inloggningssidor, för igenkänning mellan produkterna.
+   ========================================================================== */
+
+.auth-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: #fff;
+  border-color: #e5e7eb;
+  color: #374151;
+  font-weight: 500;
+}
+
+.auth-google-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.auth-plan-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.auth-plan-col {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+}
+
+.auth-plan-col--pro {
+  background: rgba(217, 184, 118, 0.14);
+  border-color: var(--brass-light);
+}
+
+.auth-plan-col strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.auth-plan-col--pro strong { color: var(--brass-dark); }
+
+.auth-plan-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.auth-plan-col li {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.auth-plan-col li:first-of-type { color: var(--text); }
+
+.auth-plan-link {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Plansida (planer.html)
+   ========================================================================== */
+
+.plans-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+  background: var(--ink);
+  color: var(--text-on-ink);
+}
+
+.plans-header .wordmark { color: var(--text-on-ink); }
+
+.plans-back {
+  color: var(--muted-on-ink);
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.plans-back:hover { color: var(--text-on-ink); }
+
+.plans-main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+  text-align: center;
+}
+
+.plans-main h1 { font-size: 2rem; }
+
+.plans-lede {
+  color: var(--muted);
+  font-size: 1rem;
+  margin: 0 0 2.5rem;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  text-align: left;
+}
+
+.plans-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem 1.5rem;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.plans-card--pro {
+  border-color: var(--brass-light);
+  background: rgba(217, 184, 118, 0.08);
+}
+
+.plans-card__badge {
+  position: absolute;
+  top: -0.7rem;
+  right: 1.5rem;
+  background: var(--brass);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+}
+
+.plans-card__tier {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.plans-card--pro .plans-card__tier { color: var(--brass-dark); }
+
+.plans-card__price {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin: 0.5rem 0 0.1rem;
+  color: var(--text);
+}
+
+.plans-card__pitch {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 1.25rem;
+}
+
+.plans-card__features {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  flex-grow: 1;
+}
+
+.plans-card a.secondary,
+.plans-card button.primary {
+  margin-top: auto;
+}
+
+@media (max-width: 640px) {
+  .plans-grid { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
    Knappar
    ========================================================================== */
 
