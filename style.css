@@ -198,6 +198,15 @@ code, kbd, pre { font-family: var(--font-mono); }
 
 .pitch-list strong { color: var(--text-on-ink); font-weight: 600; }
 
+.pitch-icon--vault {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: none;
+  margin-top: -0.35rem;
+}
+
+.pitch-icon--vault svg { width: 100%; height: 100%; }
+
 .login-formside {
   display: flex;
   align-items: center;
