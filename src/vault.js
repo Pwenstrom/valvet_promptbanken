@@ -461,16 +461,150 @@ async function loadCatalog(query = '') {
   await updateCatalogQuota();
 }
 
+let packageTemplatesCache = null;
+
+async function loadPackages(query = '') {
+  const listEl = document.querySelector('[data-package-list]');
+  if (!listEl) return;
+
+  if (!packageTemplatesCache) {
+    const { data, error } = await supabase.rpc('list_pro_templates');
+    if (error) {
+      setErrorStatus('[data-package-status]', error, 'Kunde inte ladda promptpaketen.');
+      return;
+    }
+    packageTemplatesCache = data || [];
+  }
+
+  const { data: activations, error: actError } = await supabase
+    .from('valvet_package_activations')
+    .select('id, area')
+    .eq('workspace_id', state.workspace.id);
+
+  if (actError) {
+    setErrorStatus('[data-package-status]', actError, 'Kunde inte ladda paketaktiveringar.');
+    return;
+  }
+
+  const activeAreas = new Map((activations || []).map((a) => [a.area, a.id]));
+  const trimmed = query.trim().toLowerCase();
+
+  const areas = new Map();
+  packageTemplatesCache.forEach((t) => {
+    if (!areas.has(t.area)) areas.set(t.area, { label: t.area_label, templates: [] });
+    areas.get(t.area).templates.push(t);
+  });
+
+  listEl.innerHTML = '';
+  areas.forEach((pkg, area) => {
+    const matching = trimmed
+      ? pkg.templates.filter((t) => [t.title, t.syfte, pkg.label].some((s) => (s || '').toLowerCase().includes(trimmed)))
+      : pkg.templates;
+    if (trimmed && !matching.length) return;
+
+    listEl.appendChild(renderPackageRow(area, pkg, activeAreas.get(area)));
+
+    if (activeAreas.has(area)) {
+      matching.forEach((t) => listEl.appendChild(renderPackageTemplateRow(t)));
+    }
+  });
+}
+
+function renderPackageRow(area, pkg, activationId) {
+  const isActive = Boolean(activationId);
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <div class="item-meta">
+      <div class="item-title">${escapeHtml(pkg.label)}</div>
+      <div class="item-sub">${pkg.templates.length} mallar${isActive ? ' — aktiverat' : ''}</div>
+    </div>
+    <div class="item-actions"></div>
+  `;
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'secondary';
+  btn.textContent = isActive ? 'Avaktivera' : 'Aktivera';
+  btn.addEventListener('click', () => togglePackage(btn, area, activationId));
+  row.querySelector('.item-actions').appendChild(btn);
+
+  return row;
+}
+
+async function togglePackage(button, area, activationId) {
+  button.disabled = true;
+
+  const { error } = activationId
+    ? await supabase.from('valvet_package_activations').delete().eq('id', activationId)
+    : await supabase.from('valvet_package_activations').insert({ workspace_id: state.workspace.id, area });
+
+  button.disabled = false;
+
+  if (error) {
+    setErrorStatus('[data-package-status]', error, 'Kunde inte ändra paketet.');
+    return;
+  }
+
+  await loadPackages(document.querySelector('[data-catalog-search-input]')?.value || '');
+}
+
+function renderPackageTemplateRow(template) {
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.style.paddingLeft = '1.5rem';
+  row.innerHTML = `
+    <div class="item-meta">
+      <div class="item-title">${escapeHtml(template.title)}</div>
+      <div class="item-sub">${escapeHtml(template.syfte || '')}</div>
+    </div>
+    <div class="item-actions"></div>
+  `;
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'secondary';
+  btn.textContent = 'Kopiera till mitt Valv';
+  btn.addEventListener('click', () => copyTemplateToValvet(btn, template));
+  row.querySelector('.item-actions').appendChild(btn);
+
+  return row;
+}
+
+async function copyTemplateToValvet(button, template) {
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = 'Kopierar...';
+
+  const { error } = await supabase.rpc('copy_template_to_valvet', { p_template_id: template.id });
+
+  button.disabled = false;
+  button.textContent = originalText;
+
+  if (error) {
+    setErrorStatus('[data-package-status]', error, 'Kunde inte kopiera mallen.');
+    return;
+  }
+
+  setStatus('[data-package-status]', `"${template.title}" kopierad till ditt valv.`);
+  await Promise.all([loadItems(), updateCatalogQuota(), refreshUsage()]);
+}
+
 let catalogSearchDebounceTimer = null;
 
 document.querySelector('[data-catalog-search-input]')?.addEventListener('input', (event) => {
   clearTimeout(catalogSearchDebounceTimer);
   const query = event.target.value;
-  catalogSearchDebounceTimer = setTimeout(() => loadCatalog(query), 250);
+  catalogSearchDebounceTimer = setTimeout(() => {
+    loadCatalog(query);
+    loadPackages(query);
+  }, 250);
 });
 
 document.querySelector('[data-view-tab="katalog"]')?.addEventListener('click', () => {
-  loadCatalog(document.querySelector('[data-catalog-search-input]')?.value || '');
+  const query = document.querySelector('[data-catalog-search-input]')?.value || '';
+  loadCatalog(query);
+  loadPackages(query);
 });
 
 bootstrap().then((ok) => {
