@@ -428,7 +428,7 @@ async function updateCatalogQuota() {
 }
 
 async function loadCatalog(query = '') {
-  const view = state.workspace?.plan === 'pro' ? 'published_workspace_content' : 'published_public_content';
+  const view = 'published_public_content';
   let request = supabase.from(view).select('id, type, title, content, category, published_at');
 
   const trimmed = query.trim();
