@@ -358,24 +358,22 @@ document.querySelector('[data-search-input]')?.addEventListener('input', (event)
   searchDebounceTimer = setTimeout(() => runSearch(query), 250);
 });
 
-const CATALOG_TYPE_LABELS = {
-  prompt: 'Prompt',
-  routine: 'Rutin',
-  checklist: 'Checklista',
-  guide: 'Guide',
-  faq: 'FAQ',
-  document: 'Dokument',
-  template: 'Mall',
-  assistant: 'Assistent'
+const RISK_LABELS = {
+  low: 'Låg risk',
+  medium: 'Medelrisk',
+  high: 'Hög risk'
 };
 
 function renderCatalogRow(item) {
   const row = document.createElement('div');
   row.className = 'item-row';
+  const metaParts = [];
+  if (item.area) metaParts.push(escapeHtml(item.area));
+  if (item.risk_level) metaParts.push(escapeHtml(RISK_LABELS[item.risk_level] || item.risk_level));
   row.innerHTML = `
     <div class="item-meta">
-      <div class="item-title">${escapeHtml(item.title)} <span style="font-weight:400; color:var(--muted);">(${escapeHtml(CATALOG_TYPE_LABELS[item.type] || item.type)})</span></div>
-      <div class="item-sub">${item.category ? escapeHtml(item.category) + ' — ' : ''}Publicerad ${new Date(item.published_at).toLocaleDateString('sv-SE')}</div>
+      <div class="item-title">${escapeHtml(item.title)}</div>
+      <div class="item-sub">${metaParts.length ? metaParts.join(' — ') + ' — ' : ''}${escapeHtml(item.summary || '')}</div>
     </div>
     <div class="item-actions"></div>
   `;
@@ -396,7 +394,7 @@ async function copyToValvet(button, item) {
   const originalText = button.textContent;
   button.textContent = 'Kopierar...';
 
-  const { error } = await supabase.rpc('copy_catalog_item_to_valvet', { p_source_item_id: item.id });
+  const { error } = await supabase.rpc('copy_published_prompt_to_valvet', { p_prompt_id: item.id });
 
   button.disabled = false;
   button.textContent = originalText;
@@ -427,27 +425,35 @@ async function updateCatalogQuota() {
     : `${used} av ${monthly_limit} kopior denna månad.`;
 }
 
+let catalogPromptsCache = null;
+
 async function loadCatalog(query = '') {
-  const view = 'published_public_content';
-  let request = supabase.from(view).select('id, type, title, content, category, published_at');
-
-  const trimmed = query.trim();
-  if (trimmed) {
-    const like = `%${trimmed}%`;
-    request = request.or(`title.ilike.${like},content.ilike.${like},category.ilike.${like}`);
-  }
-
-  const { data, error } = await request.order('published_at', { ascending: false });
-
   const list = document.querySelector('[data-catalog-list]');
   const empty = document.querySelector('[data-catalog-empty]');
-  list.innerHTML = '';
+  if (!list) return;
 
-  if (error) {
-    setErrorStatus('[data-catalog-empty]', error, 'Kunde inte ladda katalogen.');
-    empty.hidden = false;
-    return;
+  if (!catalogPromptsCache) {
+    // Läser den enhetliga katalogen (catalog_prompts/catalog_prompt_variants),
+    // samma källa promptbanken.html använder sen 2026-08-02 -- ersätter den
+    // äldre published_public_content-vyn (content_items module='kommun') som
+    // aldrig fick area/risk_level och slutade uppdateras.
+    const { data, error } = await supabase.rpc('list_published_prompts', { p_context_keys: ['generell'] });
+    if (error) {
+      setErrorStatus('[data-catalog-empty]', error, 'Kunde inte ladda katalogen.');
+      empty.hidden = false;
+      return;
+    }
+    catalogPromptsCache = data || [];
   }
+
+  const trimmed = query.trim().toLowerCase();
+  const data = trimmed
+    ? catalogPromptsCache.filter((item) =>
+        [item.title, item.summary, item.area, ...(item.tags || [])].some((s) => (s || '').toLowerCase().includes(trimmed))
+      )
+    : catalogPromptsCache;
+
+  list.innerHTML = '';
 
   if (!data.length) {
     empty.hidden = false;
